@@ -1,0 +1,22 @@
+{{ define "content"}}
+        <main>
+            <h1>Sign in</h1>
+            <form action="/users" method="POST">
+                    <label>Email</label><br />
+                    <input type="email" name="email" required="" />
+                    <br>
+                    <label>Username</label><br />
+                    <input type="text" name="username" required="" />
+                    <br>
+                    <label>Password</label><br />
+                    <input type="password" name="password" required="" />
+                <p>
+                    <label>
+                        <input type="checkbox" id="checkbox" value="terms" required="" />
+                        I agree to the <a href="#">terms and conditions</a>
+                    </label>
+                </p>
+                <button>Send</button>
+                <button type="reset">Reset</button>
+            </form>
+{{ end }}

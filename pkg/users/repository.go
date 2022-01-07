@@ -6,8 +6,8 @@ import (
 )
 
 type UserRepository interface {
-	RegisterUser(user *User) error
-	FindByEmailAndPassword(email string, password string) (*User, error)
+	RegisterUser(*User) error
+	FindByUserAndPassword(string, string) (*User, error)
 }
 
 type UserNeo4jRepository struct {
@@ -30,13 +30,13 @@ func (u *UserNeo4jRepository) RegisterUser(user *User) (err error) {
 	return nil
 }
 
-func (u *UserNeo4jRepository) FindByEmailAndPassword(email string, password string) (user *User, err error) {
+func (u *UserNeo4jRepository) FindByUserAndPassword(username string, password string) (user *User, err error) {
 	session := u.Driver.NewSession(neo4j.SessionConfig{})
 	defer func() {
 		err = session.Close()
 	}()
 	result, err := session.ReadTransaction(func(tx neo4j.Transaction) (interface{}, error) {
-		return u.findUser(tx, email, password)
+		return u.findUser(tx, username, password)
 	})
 	if result == nil {
 		return nil, err
@@ -60,11 +60,11 @@ func (u *UserNeo4jRepository) persistUser(tx neo4j.Transaction, user *User) (int
 	return nil, err
 }
 
-func (u *UserNeo4jRepository) findUser(tx neo4j.Transaction, email string, password string) (*User, error) {
+func (u *UserNeo4jRepository) findUser(tx neo4j.Transaction, username string, password string) (*User, error) {
 	result, err := tx.Run(
-		"MATCH (u:User {email: $email}) RETURN u.username AS username, u.password AS password",
+		"MATCH (u:User {username: $username}) RETURN u.username AS username, u.password AS password",
 		map[string]interface{}{
-			"email": email,
+			"username": username,
 		},
 	)
 	if err != nil {
@@ -78,11 +78,8 @@ func (u *UserNeo4jRepository) findUser(tx neo4j.Transaction, email string, passw
 	if !passwordsMatch(hashedPassword.(string), password) {
 		return nil, nil
 	}
-	username, _ := record.Get("username")
-	return &User{
-		Username: username.(string),
-		Email:    email,
-	}, nil
+
+	return &User{Username: username}, nil
 }
 
 func passwordsMatch(hashedPassword string, clearTextPassword string) bool {

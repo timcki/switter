@@ -1,0 +1,14 @@
+{{ define "content"}}
+        <main>
+            <h1>Sign in</h1>
+            <form action="/users/login" method="POST">
+                <p>
+                    <label>Username</label><br />
+                    <input type="text" name="username" required="" />
+                    <br>
+                    <label>Password</label><br />
+                    <input type="password" name="password" required="" />
+                </p>
+                <button>Send</button>
+            </form>
+{{ end }}

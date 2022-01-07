@@ -1,12 +1,11 @@
 package users
 
 import (
-	"encoding/json"
-	"github.com/dgrijalva/jwt-go"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/dgrijalva/jwt-go"
 )
 
 type UserLogin struct {
@@ -15,8 +14,8 @@ type UserLogin struct {
 
 type LoggedInUser struct {
 	Username string `json:"username"`
-	Email string `json:"email"`
-	Token string `json:"token"`
+	Email    string `json:"email"`
+	Token    string `json:"token"`
 }
 
 type UserLoginHandler struct {
@@ -24,29 +23,31 @@ type UserLoginHandler struct {
 	UserRepository UserRepository
 }
 
-func (u *UserLoginHandler) Login(writer http.ResponseWriter, request *http.Request) {
-	requestBody, _ := ioutil.ReadAll(request.Body)
-	userLoginRequest := UserLogin{}
-	_ = json.Unmarshal(requestBody, &userLoginRequest)
-	requestUser := userLoginRequest.User
-	user, _ := u.UserRepository.FindByEmailAndPassword(
-		requestUser.Email,
+func (u *UserLoginHandler) Login(w http.ResponseWriter, r *http.Request) {
+
+	if err := r.ParseForm(); err != nil {
+		panic(err)
+	}
+	requestUser := User{
+		Username: r.Form.Get("username"),
+		Password: r.Form.Get("password"),
+	}
+
+	user, _ := u.UserRepository.FindByUserAndPassword(
+		requestUser.Username,
 		requestUser.Password)
 
 	if user == nil {
-		writer.WriteHeader(401)
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
 	token, _ := CreateToken(user)
-	loggedInUser := &LoggedInUser{
-		Username: user.Username,
-		Email:    user.Email,
-		Token:    token,
-	}
-	writer.WriteHeader(200)
-	bytes, _ := json.Marshal(&loggedInUser)
-	_, _ = writer.Write(bytes)
+	r.AddCookie(&http.Cookie{
+		Name:  "token",
+		Value: token,
+	})
+	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func CreateToken(user *User) (string, error) {

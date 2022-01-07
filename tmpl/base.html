@@ -1,0 +1,30 @@
+{{ define "base"}}
+<!doctype html>
+<html lang="en-GB">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="icon" href="/assets/images/favicon.png" />
+        <title>Login | Switter</title>
+        <link rel="stylesheet" href="https://cdn.simplecss.org/simple.css">
+    </head>
+    <body>
+        <header>
+            <h1>Switter Neo4j</h1>
+            <p>Prosty klon Twittera oparty o bazę danych Neo4j</p>
+            <nav>
+                <a href="/">Home</a>
+                <a href="/login_page">Login</a>
+                <a href="/register_page">Register</a>
+                <a href="https://github.com/timcki/cloud_project">Project code</a>
+            </nav>
+        </header>
+        <main>
+            {{ template "content" .}}
+        </main>
+        <footer>
+            <p>Switter 2022 @ Przetwarzanie Danych w Chmurach Obliczeniowych</p>
+        </footer>
+    </body>
+</html>
+{{end}}

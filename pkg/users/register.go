@@ -1,14 +1,8 @@
 package users
 
 import (
-	"encoding/json"
-	"io/ioutil"
 	"net/http"
 )
-
-//func(writer http.ResponseWriter, request *http.Request) {
-//
-//}
 
 type UserRegistration struct {
 	User User `json:"user"`
@@ -25,20 +19,22 @@ type UserRegistrationHandler struct {
 	UserRepository UserRepository
 }
 
-func (u *UserRegistrationHandler) Register(writer http.ResponseWriter, request *http.Request) {
-	requestBody, _ := ioutil.ReadAll(request.Body)
-	userRegistrationRequest := UserRegistration{}
-	_ = json.Unmarshal(requestBody, &userRegistrationRequest)
-	requestUser := userRegistrationRequest.User
-	_ = u.UserRepository.RegisterUser(&requestUser)
+func (u *UserRegistrationHandler) Register(w http.ResponseWriter, r *http.Request) {
+	if err := r.ParseForm(); err != nil {
+		panic(err)
+	}
+	user := User{
+		Username: r.Form.Get("username"),
+		Email:    r.Form.Get("email"),
+		Password: r.Form.Get("password"),
+	}
 
-	writer.WriteHeader(201)
-	writer.Header().Add("Content-Type", "application/json")
-	userRegistrationResponse := UserRegistration{
-		User: User{
-			Username: requestUser.Username,
-			Email:    requestUser.Email,
-		}}
-	bytes, _ := json.Marshal(&userRegistrationResponse)
-	_, _ = writer.Write(bytes)
+	if user.Username == "" || user.Email == "" || user.Password == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Header().Add("Content-Type", "application/json")
+		w.Write([]byte("{}"))
+	}
+
+	_ = u.UserRepository.RegisterUser(&user)
+	http.Redirect(w, r, "/login_page", http.StatusCreated)
 }
