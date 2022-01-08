@@ -31,10 +31,9 @@ func (u *UserRegistrationHandler) Register(w http.ResponseWriter, r *http.Reques
 
 	if user.Username == "" || user.Email == "" || user.Password == "" {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Header().Add("Content-Type", "application/json")
-		w.Write([]byte("{}"))
+		return
 	}
 
 	_ = u.UserRepository.RegisterUser(&user)
-	http.Redirect(w, r, "/login_page", http.StatusCreated)
+	http.Redirect(w, r, "/login", http.StatusTemporaryRedirect)
 }

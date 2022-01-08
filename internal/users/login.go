@@ -23,38 +23,46 @@ type UserLoginHandler struct {
 	UserRepository UserRepository
 }
 
+type CustomClaims struct {
+	Username string `json:"username"`
+	jwt.StandardClaims
+}
+
 func (u *UserLoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	if err := r.ParseForm(); err != nil {
 		panic(err)
 	}
+
 	requestUser := User{
 		Username: r.Form.Get("username"),
 		Password: r.Form.Get("password"),
 	}
 
-	user, _ := u.UserRepository.FindByUserAndPassword(
-		requestUser.Username,
-		requestUser.Password)
-
-	if user == nil {
+	if found, _ := u.UserRepository.FindByUserAndPassword(requestUser.Username, requestUser.Password); !found {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
-	token, _ := CreateToken(user)
-	r.AddCookie(&http.Cookie{
-		Name:  "token",
-		Value: token,
+	//token, _ := CreateToken(requestUser.Username)
+
+	http.SetCookie(w, &http.Cookie{
+		Name:    "jwt_token",
+		Value:   requestUser.Username,
+		Expires: time.Now().Add(time.Hour * 24),
+		Path:    "/",
 	})
-	http.Redirect(w, r, "/", http.StatusFound)
+	http.Redirect(w, r, "/auth/feed", http.StatusFound)
 }
 
-func CreateToken(user *User) (string, error) {
-	claims := jwt.MapClaims{}
-	claims["authorized"] = true
-	claims["user_id"] = user.Username
-	claims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+func CreateToken(username string) (string, error) {
+	claims := CustomClaims{
+		Username: username,
+		StandardClaims: jwt.StandardClaims{
+			ExpiresAt: 15000,
+			Issuer:    "timchmielecki.com",
+		},
+	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS512, claims)
-	return token.SignedString([]byte(os.Getenv("SECRET_ACCESS")))
+	return token.SignedString([]byte(os.Getenv("JWT_KEY")))
 }

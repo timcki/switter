@@ -9,12 +9,12 @@ COPY go.sum .
 RUN go mod download
 
 COPY cmd cmd
-COPY pkg pkg
-RUN go build ./cmd/conduit
+COPY internal internal
+RUN go build ./cmd/switter
 
 
 FROM alpine
-COPY --from=builder /app/conduit /bin/conduit
+COPY --from=builder /app/switter /bin/switter
 WORKDIR /app
 
-CMD ["/bin/conduit"]
+CMD ["/bin/switter"]
