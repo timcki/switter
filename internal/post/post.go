@@ -7,4 +7,5 @@ type Post struct {
 	// Metadata
 	Author string
 	Id     int64
+	Likes  int
 }

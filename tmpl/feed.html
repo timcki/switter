@@ -14,7 +14,7 @@
                 <p>
                 <h4><a href="/auth/{{ .Author }}">{{ .Author }}</a><code class="language-plaintext highlighter-yellow">  wrote</code></h4>
                 {{ .Body }}<br>
-                <button onclick="window.location.href='/auth/id/{{ .Id }}/like';">❤</button>
+                <button onclick="window.location.href='/auth/id/{{ .Id }}/like';">❤ {{ .Likes }}</button>
                 </p>
             </div>
             {{ end }}

@@ -40,8 +40,9 @@ func (u *UserNeo4jRepository) GetUserPosts(username string) []post.Post {
 		}
 
 		for _, r := range records {
+			id := r.Values[0].(dbtype.Node).Id
 			body := r.Values[0].(dbtype.Node).Props["body"].(string)
-			posts = append(posts, post.Post{Author: username, Body: body})
+			posts = append(posts, post.Post{Id: id, Author: username, Body: body})
 		}
 		return nil, nil
 	})
@@ -78,6 +79,30 @@ func (u *UserNeo4jRepository) GetUsers(me string) []string {
 		return nil, nil
 	})
 	return users
+
+}
+
+func (u *UserNeo4jRepository) GetLikes(id int64) int {
+	session := u.Driver.NewSession(neo4j.SessionConfig{})
+	defer session.Close()
+
+	// Create post with relationship to author (no need for any keys this way)
+	likes, _ := session.WriteTransaction(func(tx neo4j.Transaction) (interface{}, error) {
+		query := "MATCH (u:User)-[:LIKES]->(p:Post) WHERE ID(p)=$id RETURN COUNT(u)"
+		params := map[string]interface{}{
+			"id": id,
+		}
+		result, err := tx.Run(query, params)
+		if err != nil {
+			return 0, err
+		}
+		if record, err := result.Single(); err != nil {
+			return 0, err
+		} else {
+			return record.Values[0], nil
+		}
+	})
+	return int(likes.(int64))
 
 }
 

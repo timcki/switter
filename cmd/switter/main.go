@@ -127,6 +127,9 @@ func main() {
 		user, _ := parseJwt(r)
 
 		usersPosts := repo.GetFollowedPosts(user)
+		for i, post := range usersPosts {
+			usersPosts[i].Likes = repo.GetLikes(post.Id)
+		}
 		users := repo.GetUsers(user)
 
 		tmpl.ExecuteTemplate(w, "base", map[string]interface{}{"You": user, "Others": users, "Posts": usersPosts})
@@ -173,12 +176,15 @@ func main() {
 		me, _ := parseJwt(r)
 
 		usersPosts := repo.GetUserPosts(user)
+		for i, post := range usersPosts {
+			usersPosts[i].Likes = repo.GetLikes(post.Id)
+		}
 		users := repo.GetUsers(me)
 
 		tmpl.ExecuteTemplate(w, "base", map[string]interface{}{"You": me, "Others": users, "Posts": usersPosts})
 	})
 
-	if err := http.ListenAndServe(":3000", r); err != nil {
+	if err := http.ListenAndServe(os.Getenv("SWITTER_PORT"), r); err != nil {
 		panic(err)
 	}
 }
